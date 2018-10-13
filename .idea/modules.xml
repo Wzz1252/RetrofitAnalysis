@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/guava/adapter-guava.iml" filepath="$PROJECT_DIR$/retrofit-adapters/guava/adapter-guava.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/java8/adapter-java8.iml" filepath="$PROJECT_DIR$/retrofit-adapters/java8/adapter-java8.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/rxjava/adapter-rxjava.iml" filepath="$PROJECT_DIR$/retrofit-adapters/rxjava/adapter-rxjava.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/rxjava2/adapter-rxjava2.iml" filepath="$PROJECT_DIR$/retrofit-adapters/rxjava2/adapter-rxjava2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/scala/adapter-scala.iml" filepath="$PROJECT_DIR$/retrofit-adapters/scala/adapter-scala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/gson/converter-gson.iml" filepath="$PROJECT_DIR$/retrofit-converters/gson/converter-gson.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/guava/converter-guava.iml" filepath="$PROJECT_DIR$/retrofit-converters/guava/converter-guava.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/jackson/converter-jackson.iml" filepath="$PROJECT_DIR$/retrofit-converters/jackson/converter-jackson.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/java8/converter-java8.iml" filepath="$PROJECT_DIR$/retrofit-converters/java8/converter-java8.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/jaxb/converter-jaxb.iml" filepath="$PROJECT_DIR$/retrofit-converters/jaxb/converter-jaxb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/moshi/converter-moshi.iml" filepath="$PROJECT_DIR$/retrofit-converters/moshi/converter-moshi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/protobuf/converter-protobuf.iml" filepath="$PROJECT_DIR$/retrofit-converters/protobuf/converter-protobuf.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/scalars/converter-scalars.iml" filepath="$PROJECT_DIR$/retrofit-converters/scalars/converter-scalars.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/simplexml/converter-simplexml.iml" filepath="$PROJECT_DIR$/retrofit-converters/simplexml/converter-simplexml.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/wire/converter-wire.iml" filepath="$PROJECT_DIR$/retrofit-converters/wire/converter-wire.iml" />
+      <module fileurl="file://$PROJECT_DIR$/parent.iml" filepath="$PROJECT_DIR$/parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit/retrofit.iml" filepath="$PROJECT_DIR$/retrofit/retrofit.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-adapters/retrofit-adapters.iml" filepath="$PROJECT_DIR$/retrofit-adapters/retrofit-adapters.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-converters/retrofit-converters.iml" filepath="$PROJECT_DIR$/retrofit-converters/retrofit-converters.iml" />
+      <module fileurl="file://$PROJECT_DIR$/retrofit-mock/retrofit-mock.iml" filepath="$PROJECT_DIR$/retrofit-mock/retrofit-mock.iml" />
+      <module fileurl="file://$PROJECT_DIR$/samples/samples.iml" filepath="$PROJECT_DIR$/samples/samples.iml" />
+    </modules>
+  </component>
+</project>

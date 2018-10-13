@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="adapter-guava" />
+        <module name="adapter-java8" />
+        <module name="adapter-rxjava" />
+        <module name="adapter-rxjava2" />
+        <module name="adapter-scala" />
+        <module name="converter-gson" />
+        <module name="converter-guava" />
+        <module name="converter-jackson" />
+        <module name="converter-java8" />
+        <module name="converter-jaxb" />
+        <module name="converter-moshi" />
+        <module name="converter-protobuf" />
+        <module name="converter-scalars" />
+        <module name="converter-simplexml" />
+        <module name="converter-wire" />
+        <module name="retrofit" />
+        <module name="retrofit-mock" />
+        <module name="samples" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="adapter-guava" target="1.7" />
+      <module name="adapter-java8" target="1.8" />
+      <module name="adapter-rxjava" target="1.7" />
+      <module name="adapter-rxjava2" target="1.7" />
+      <module name="adapter-scala" target="1.8" />
+      <module name="converter-gson" target="1.7" />
+      <module name="converter-guava" target="1.7" />
+      <module name="converter-jackson" target="1.7" />
+      <module name="converter-java8" target="1.8" />
+      <module name="converter-jaxb" target="1.7" />
+      <module name="converter-moshi" target="1.7" />
+      <module name="converter-protobuf" target="1.7" />
+      <module name="converter-scalars" target="1.7" />
+      <module name="converter-simplexml" target="1.7" />
+      <module name="converter-wire" target="1.7" />
+      <module name="parent" target="1.5" />
+      <module name="retrofit" target="8" />
+      <module name="retrofit-adapters" target="1.5" />
+      <module name="retrofit-converters" target="1.5" />
+      <module name="retrofit-mock" target="1.7" />
+      <module name="samples" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
