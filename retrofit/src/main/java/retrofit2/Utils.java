@@ -64,6 +64,7 @@ final class Utils {
 
     /**
      * 获得类中的原始类型
+     *
      * @param type
      * @return
      */
@@ -348,6 +349,7 @@ final class Utils {
 
     /**
      * 获取参数上限
+     *
      * @param index
      * @param type
      * @return
@@ -365,10 +367,18 @@ final class Utils {
         return paramType;
     }
 
+    /**
+     * 验证可解析类型
+     *
+     * @param type 方法参数
+     * @return
+     */
     static boolean hasUnresolvableType(@Nullable Type type) {
         if (type instanceof Class<?>) {
             return false;
         }
+
+        // 判断有没有泛型（不确定）
         if (type instanceof ParameterizedType) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
             for (Type typeArgument : parameterizedType.getActualTypeArguments()) {
@@ -378,12 +388,15 @@ final class Utils {
             }
             return false;
         }
+        // 泛型数组
         if (type instanceof GenericArrayType) {
             return hasUnresolvableType(((GenericArrayType) type).getGenericComponentType());
         }
+        // 泛型接口
         if (type instanceof TypeVariable) {
             return true;
         }
+        // 泛型表达式
         if (type instanceof WildcardType) {
             return true;
         }

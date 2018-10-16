@@ -52,7 +52,7 @@ public final class SimpleService {
     }
 
     public static void main(String... args) throws IOException {
-        Retrofit retrofit = new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder() // Builder 会创建当前的平台
                 .baseUrl(API_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -61,6 +61,7 @@ public final class SimpleService {
 
         // 创建一个贡献者实例
         // 当执行 contributors 时，将通过动态代理调用 invoke 方法
+        // Call --> OkHttpCall
         Call<List<Contributor>> call = github.contributors("square", "retrofit");
 
         // 异步 打印返回结果

@@ -25,6 +25,9 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Streaming;
 
+/**
+ * 内置转换器
+ */
 final class BuiltInConverters extends Converter.Factory {
     /**
      * Not volatile because we don't mind multiple threads discovering this.
@@ -57,8 +60,8 @@ final class BuiltInConverters extends Converter.Factory {
 
     @Override
     public @Nullable
-    Converter<?, RequestBody> requestBodyConverter(Type type,
-                                                   Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+    Converter<?, RequestBody> requestBodyConverter(
+            Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
         if (RequestBody.class.isAssignableFrom(Utils.getRawType(type))) {
             return RequestBodyConverter.INSTANCE;
         }

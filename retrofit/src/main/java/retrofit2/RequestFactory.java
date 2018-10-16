@@ -61,20 +61,36 @@ import retrofit2.http.Url;
 import static retrofit2.Utils.methodError;
 import static retrofit2.Utils.parameterError;
 
+/**
+ * 请求工厂
+ * 里面保存了请求体中所需要的所有参数
+ * 请求类型、域名、头部信息、媒体类型、是否有Body、是否是表单提交等信息
+ */
 final class RequestFactory {
     static RequestFactory parseAnnotations(Retrofit retrofit, Method method) {
         return new Builder(retrofit, method).build();
     }
 
+    // 具体的执行方法
     private final Method method;
+    // 基本域名
     private final HttpUrl baseUrl;
+    // 请求类型 GET POST ...
     final String httpMethod;
+    // 基本域名后面的url
     private final String relativeUrl;
+    // 通过注解获得的头信息
     private final Headers headers;
+    // 通过注解获得的头信息
+    // 这个是 Content-Type 类型，用来标注一些特殊的功能，如表单、文本信息、媒体信息等
     private final MediaType contentType;
+    // 表示请求体是否是 Body
     private final boolean hasBody;
+    // 表示请求体是否是一个 Form 表单
     private final boolean isFormEncoded;
+    // 表示请求体是一个支持文件上传的 Form 表单
     private final boolean isMultipart;
+    // 保存参数的注解对象（这个注解对象由程序整理过的）
     private final ParameterHandler<?>[] parameterHandlers;
 
     RequestFactory(Builder builder) {
@@ -103,12 +119,14 @@ final class RequestFactory {
         RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl,
                 headers, contentType, hasBody, isFormEncoded, isMultipart);
 
+        // 保存形参所对应的值
         List<Object> argumentList = new ArrayList<>(argumentCount);
         for (int p = 0; p < argumentCount; p++) {
             argumentList.add(args[p]);
             handlers[p].apply(requestBuilder, args[p]);
         }
 
+        // 构建一个 OkHttp 的 Request 对象
         return requestBuilder.get()
                 .tag(Invocation.class, new Invocation(method, argumentList))
                 .build();
@@ -141,15 +159,21 @@ final class RequestFactory {
         boolean gotQuery;
         boolean gotQueryName;
         boolean gotQueryMap;
+        // 是否得到url
         boolean gotUrl;
         String httpMethod;
         boolean hasBody;
         boolean isFormEncoded;
         boolean isMultipart;
+        // 相对的url
+        // https://www.baidu.com/a/b/c --> /a/b/c
         String relativeUrl;
         Headers headers;
         MediaType contentType;
+        // 相对url中的字段名称
+        // /repos/{owner}/{repo}/contributors --> 1:owner 2:repo
         Set<String> relativeUrlParamNames;
+        // 保存参数的注解对象（这个注解对象由程序整理过的）
         ParameterHandler<?>[] parameterHandlers;
 
         Builder(Retrofit retrofit, Method method) {
@@ -161,10 +185,15 @@ final class RequestFactory {
         }
 
         RequestFactory build() {
+            // 会获得方法中的各种注解
+            // 如果是 GET POST...: 会获得局部的url与{}中的参数
+            // 如果是 Header: 会将内容解析并保存到OkHttp的Header对象中
+            // 如果是 Multipart 或 FormUrlEncoded: 则会置起标志位
             for (Annotation annotation : methodAnnotations) {
                 parseMethodAnnotation(annotation);
             }
 
+            // 在 parseMethodAnnotation() 进行设置
             if (httpMethod == null) {
                 throw methodError(method, "HTTP method annotation is required (e.g., @GET, @POST, etc.).");
             }
@@ -182,26 +211,30 @@ final class RequestFactory {
 
             int parameterCount = parameterAnnotationsArray.length;
             parameterHandlers = new ParameterHandler<?>[parameterCount];
+            // 一次性解析一个参数注解
             for (int p = 0; p < parameterCount; p++) {
                 parameterHandlers[p] = parseParameter(p, parameterTypes[p], parameterAnnotationsArray[p]);
             }
 
+            // 如果 relativeUrl 为空，表明使用的应该是@url方式
             if (relativeUrl == null && !gotUrl) {
                 throw methodError(method, "Missing either @%s URL or @Url parameter.", httpMethod);
             }
-            if (!isFormEncoded && !isMultipart && !hasBody && gotBody) {
+            if (!isFormEncoded && !isMultipart && !hasBody && gotBody) { // 没有身体HTTP方法不能包含@Body
                 throw methodError(method, "Non-body HTTP method cannot contain @Body.");
             }
-            if (isFormEncoded && !gotField) {
+            if (isFormEncoded && !gotField) { // 表单编码方法必须至少包含一个@Field
                 throw methodError(method, "Form-encoded method must contain at least one @Field.");
             }
-            if (isMultipart && !gotPart) {
+            if (isMultipart && !gotPart) { // 多部分方法必须至少包含一个@Part
                 throw methodError(method, "Multipart method must contain at least one @Part.");
             }
-
             return new RequestFactory(this);
         }
 
+        /**
+         * @param annotation 方法上的注解
+         */
         private void parseMethodAnnotation(Annotation annotation) {
             if (annotation instanceof DELETE) {
                 parseHttpMethodAndPath("DELETE", ((DELETE) annotation).value(), false);
@@ -240,10 +273,11 @@ final class RequestFactory {
         }
 
         /**
+         * 解析Http方法和路径
          *
          * @param httpMethod HTTP的请求类型 GET POST 等
-         * @param value 注解的值
-         * @param hasBody 是否有 body
+         * @param value      注解（GET POST）中跟的追加url内容
+         * @param hasBody    是否有 body
          */
         private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
             if (this.httpMethod != null) {
@@ -269,18 +303,24 @@ final class RequestFactory {
                 }
             }
 
+            // 如果上面没有找到，就将原始值付给 relativeUrl。还有另一种情况是value本身就是null，
+            // 这种情况下用户应该使用的是@url注解
             this.relativeUrl = value;
             this.relativeUrlParamNames = parsePathParameters(value);
         }
 
         private Headers parseHeaders(String[] headers) {
+            // 创建 OkHttp Headers
             Headers.Builder builder = new Headers.Builder();
             for (String header : headers) {
                 int colon = header.indexOf(':');
+                // 如果不符合 key:value 形式，抛出异常
                 if (colon == -1 || colon == 0 || colon == header.length() - 1) {
                     throw methodError(method,
                             "@Headers value must be in the form \"Name: Value\". Found: \"%s\"", header);
                 }
+
+                // 取出 key:value 并且保存到 OkHttp 的 Header 中
                 String headerName = header.substring(0, colon);
                 String headerValue = header.substring(colon + 1).trim();
                 if ("Content-Type".equalsIgnoreCase(headerName)) {
@@ -296,58 +336,73 @@ final class RequestFactory {
             return builder.build();
         }
 
-        private ParameterHandler<?> parseParameter(
-                int p, Type parameterType, @Nullable Annotation[] annotations) {
+        /**
+         * @param p             索引
+         * @param parameterType 方法的参数
+         * @param annotations   方法参数所追加的注解
+         * @return
+         */
+        private ParameterHandler<?> parseParameter(int p, Type parameterType, @Nullable Annotation[] annotations) {
             ParameterHandler<?> result = null;
             if (annotations != null) {
                 for (Annotation annotation : annotations) {
+                    // 通过遍历的方式获得当前方法的所有参数所对应的注解
+                    // 注：这里表明，一个参数只能有一个注解
                     ParameterHandler<?> annotationAction =
                             parseParameterAnnotation(p, parameterType, annotations, annotation);
 
                     if (annotationAction == null) {
                         continue;
                     }
-
                     if (result != null) {
                         throw parameterError(method, p,
                                 "Multiple Retrofit annotations found, only one allowed.");
                     }
-
                     result = annotationAction;
                 }
             }
-
+            // 如果没找到注解，也会抛出异常
             if (result == null) {
                 throw parameterError(method, p, "No Retrofit annotation found.");
             }
-
             return result;
         }
 
+        /**
+         * 解析参数注解
+         * 对方法所对应的注解进行解析，在解析的同时再根据里面的各种标志位来判断规则是否正确
+         *
+         * @param p           索引
+         * @param type        方法的参数
+         * @param annotations 方法参数所追加的注解数组
+         * @param annotation  方法参数所追加的注解
+         * @return
+         */
         private ParameterHandler<?> parseParameterAnnotation(
                 int p, Type type, Annotation[] annotations, Annotation annotation) {
+            // 如果注解是 @Url
             if (annotation instanceof Url) {
                 validateResolvableType(p, type);
-                if (gotUrl) {
+                if (gotUrl) { // 找到多个@Url方法注释
                     throw parameterError(method, p, "Multiple @Url method annotations found.");
                 }
-                if (gotPath) {
+                if (gotPath) { // @Path参数不能与@Url一起使用
                     throw parameterError(method, p, "@Path parameters may not be used with @Url.");
                 }
-                if (gotQuery) {
+                if (gotQuery) { // @Url参数不能在@Query之后出现
                     throw parameterError(method, p, "A @Url parameter must not come after a @Query.");
                 }
-                if (gotQueryName) {
+                if (gotQueryName) { // @Url参数不得在@QueryName之后
                     throw parameterError(method, p, "A @Url parameter must not come after a @QueryName.");
                 }
-                if (gotQueryMap) {
+                if (gotQueryMap) { // @Url参数不能出现在@QueryMap之后
                     throw parameterError(method, p, "A @Url parameter must not come after a @QueryMap.");
                 }
-                if (relativeUrl != null) {
+                if (relativeUrl != null) { // @Url不能与@％s URL一起使用
                     throw parameterError(method, p, "@Url cannot be used with @%s URL", httpMethod);
                 }
 
-                gotUrl = true;
+                gotUrl = true; // 得到地址
 
                 if (type == HttpUrl.class
                         || type == String.class
@@ -721,7 +776,7 @@ final class RequestFactory {
                 return new ParameterHandler.Body<>(converter);
             }
 
-            return null; // Not a Retrofit annotation.
+            return null; // 没有定义 Retrofit 注解
         }
 
         private void validateResolvableType(int p, Type type) {
@@ -743,8 +798,7 @@ final class RequestFactory {
         }
 
         /**
-         * Gets the set of unique path parameters used in the given URI. If a parameter is used twice
-         * in the URI, it will only show up once in the set.
+         * 获取给定 URI 中使用的唯一路径参数集。 如果参数在 URI 中使用了两次，则它只会在集合中显示一次。
          */
         static Set<String> parsePathParameters(String path) {
             Matcher m = PARAM_URL_REGEX.matcher(path);

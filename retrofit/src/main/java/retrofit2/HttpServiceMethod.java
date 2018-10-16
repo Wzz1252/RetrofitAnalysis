@@ -35,12 +35,16 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
      * 返回此适配器在将HTTP响应主体转换为Java对象时使用的值类型。 例如，Call <Repo>的响应类型是Repo。
      * 此类型用于准备传递给#adapt的调用。
      * 注意：这通常与提供给此调用适配器工厂的returnType类型不同。
+     *
+     * @param retrofit       核心类
+     * @param method         执行的方法
+     * @param requestFactory 请求体
      */
     static <ResponseT, ReturnT> HttpServiceMethod<ResponseT, ReturnT> parseAnnotations(
             Retrofit retrofit, Method method, RequestFactory requestFactory) {
         CallAdapter<ResponseT, ReturnT> callAdapter = createCallAdapter(retrofit, method);
-        Type responseType = callAdapter.responseType();
-        // 上界的类型不能是Response类型，否则直接抛异常
+        Type responseType = callAdapter.responseType(); // 这里的返回类型解释上界
+        // 上界的类型不能是 Response 类型，否则直接抛异常
         if (responseType == Response.class || responseType == okhttp3.Response.class) {
             throw methodError(method, "'"
                     + Utils.getRawType(responseType).getName()
@@ -52,6 +56,7 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
             throw methodError(method, "HEAD method must use Void as response type.");
         }
 
+        // 获得返回结果的转换器
         Converter<ResponseBody, ResponseT> responseConverter =
                 createResponseConverter(retrofit, method, responseType);
 
@@ -64,17 +69,24 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
         Type returnType = method.getGenericReturnType(); // 获取方法的返回值类型
         Annotation[] annotations = method.getAnnotations(); // 获得当前方法中的所有注解
         try {
-            // 无需检查
             return (CallAdapter<ResponseT, ReturnT>) retrofit.callAdapter(returnType, annotations);
         } catch (RuntimeException e) { // 各种各样的原因，因为工厂是由用户创建的
             throw methodError(method, e, "Unable to create call adapter for %s", returnType);
         }
     }
 
-    // 创建响应转换器
+    /**
+     * 创建响应转换器
+     *
+     * @param retrofit     核心类
+     * @param method       执行的方法
+     * @param responseType 响应类型
+     * @param <ResponseT>
+     * @return
+     */
     private static <ResponseT> Converter<ResponseBody, ResponseT> createResponseConverter(
             Retrofit retrofit, Method method, Type responseType) {
-        Annotation[] annotations = method.getAnnotations(); // 获得当前方法的所有注解
+        Annotation[] annotations = method.getAnnotations();
         try {
             return retrofit.responseBodyConverter(responseType, annotations);
         } catch (RuntimeException e) { // Wide exception range because factories are user code.
@@ -88,7 +100,7 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
     private final Converter<ResponseBody, ResponseT> responseConverter;
 
     /**
-     * @param requestFactory    封装着具体的网络请求中的内容（请求类型、url等）
+     * @param requestFactory    请求体（请求类型、url等）
      * @param callFactory       网络请求的底层实现（默认是OkHttp）
      * @param callAdapter       网络请求适配器【还有点迷糊】
      * @param responseConverter 对返回的数据进行转换（转换成泛型指定的格式）
@@ -104,7 +116,8 @@ final class HttpServiceMethod<ResponseT, ReturnT> extends ServiceMethod<ReturnT>
 
     /**
      * 由动态代理执行
-     * @param args 具体的每一个方法
+     *
+     * @param args 执行方法的每个参数
      * @return
      */
     @Override

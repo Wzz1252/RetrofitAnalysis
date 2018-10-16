@@ -65,26 +65,24 @@ public final class Retrofit {
     // 作用：存储网络请求相关的配置，如网络请求的方法、数据转换器、网络请求适配器、网络请求工厂、基地址等
     private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-    // 网络请求器的工厂
-    // 作用：生产网络请求器（Call）
-    // Retrofit是默认使用okhttp
+    // 网络请求器
+    // 默认使用 OkHttp
     final okhttp3.Call.Factory callFactory;
 
-    // 网络请求的url地址
+    // 网络请求的基础 url 地址
     final HttpUrl baseUrl;
 
-    // 数据转换器工厂的集合
-    // 作用：放置数据转换器工厂
-    // 数据转换器工厂作用：生产数据转换器（converter）
+    // 数据转换器工厂
+    // 在网络结果返回后，对结果进行解析（按照 T 进行解析）
     final List<Converter.Factory> converterFactories;
 
     // 网络请求适配器工厂的集合
-    // 作用：放置网络请求适配器工厂
-    // 网络请求适配器工厂作用：生产网络请求适配器（CallAdapter）
-    // 下面会详细说明
+    // 生产网络请求适配器（CallAdapter）
     final List<CallAdapter.Factory> callAdapterFactories;
 
-    // 回调方法执行器
+    // 回调方法执行时所在的线程
+    // 注：在 Android 平台上，回调的线程是 UI 线程
+    //    在 Java 中为 null
     final @Nullable
     Executor callbackExecutor;
 
@@ -159,12 +157,10 @@ public final class Retrofit {
             // 具体方法作用：
             // 1. 给接口中每个方法的注解进行解析并得到一个 ServiceMethod 对象
             // 2. 以 Method 为键将该对象存入 ConcurrentHashMap 集合中（ConcurrentHashMap 支持并发并通过锁分段技术提高性能）
-            // 特别注意：如果不是提前验证则进行动态解析对应方法（下面会详细说明），得到一个ServiceMethod对象，最后存入到 ConcurrentHashMap 集合中，类似延迟加载（默认）
+            // 特别注意：类似延迟加载（默认），如果不是提前验证则进行动态解析对应方法，得到一个ServiceMethod 对象，最后存入到 ConcurrentHashMap 集合中
             eagerlyValidateMethods(service);
         }
-
-        // 创建了网络请求接口的动态代理对象，即通过动态代理创建网络请求接口的实例 （并最终返回）
-        // 该动态代理是为了拿到网络请求接口实例上所有注解
+        // 该动态代理是为了拿到网络请求接口实例上所有注解与方法
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
                 new InvocationHandler() {
                     private final Platform platform = Platform.get();
@@ -173,8 +169,8 @@ public final class Retrofit {
                     /**
                      *
                      * @param proxy
-                     * @param method 执行的方法名
-                     * @param args 方法所对应的形参列表
+                     * @param method    执行的方法名
+                     * @param args      方法所对应的形参列表
                      * @return
                      * @throws Throwable
                      */
@@ -190,6 +186,7 @@ public final class Retrofit {
                         if (platform.isDefaultMethod(method)) {
                             return platform.invokeDefaultMethod(method, service, proxy, args);
                         }
+                        // 在调用到具体接口的时候才会执行具体的 invoke 方法，针对这个具体的方法生成 ServiceMethod
                         return loadServiceMethod(method).invoke(args != null ? args : emptyArgs);
                     }
                 });
@@ -570,9 +567,9 @@ public final class Retrofit {
          */
         public Builder baseUrl(HttpUrl baseUrl) {
             checkNotNull(baseUrl, "baseUrl == null");
-            // 对 URL 进行分割
             List<String> pathSegments = baseUrl.pathSegments();
             // 判断是不是以"/"结尾，如果不是抛出异常
+            // 但是这里测试的结果就算不已/结尾，也不会抛出异常...
             if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
                 throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
             }
@@ -644,7 +641,7 @@ public final class Retrofit {
             }
 
             // 配置网络请求执行器
-            // 如果没有设置，默认使用 OkHttp
+            // 如果没有设置，默认使用 OkHttp 的默认配置
             okhttp3.Call.Factory callFactory = this.callFactory;
             if (callFactory == null) {
                 callFactory = new OkHttpClient();
@@ -652,27 +649,28 @@ public final class Retrofit {
 
             // 配置回调方法执行器
             Executor callbackExecutor = this.callbackExecutor;
-            // 如果没指定，则默认使用Platform检测环境时的默认callbackExecutor
-            // 即Android默认的callbackExecutor
+            // 如果没指定，则默认使用平台默认的回调线程
             if (callbackExecutor == null) {
                 callbackExecutor = platform.defaultCallbackExecutor();
             }
 
             // 配置网络请求适配器工厂
             List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
-            // 向该集合中添加了步骤2中创建的CallAdapter.Factory请求适配器（添加在集合器末尾）
-            // 请求适配器工厂集合存储顺序：自定义1适配器工厂、自定义2适配器工厂...默认适配器工厂（ExecutorCallAdapterFactory）
+            // 不管有没有设置，在最后都会添加一个默认的
             callAdapterFactories.addAll(platform.defaultCallAdapterFactories(callbackExecutor));
 
-            // Make a defensive copy of the converters.
+            // 制作转换器的防御副本
             List<Converter.Factory> converterFactories = new ArrayList<>(
+                    // 如果是 Android 平台，默认会有一个 OptionalConverterFactory 的转换器
+                    // 如果是 Java 平台，则会有两个
                     1 + this.converterFactories.size() + platform.defaultConverterFactoriesSize());
 
             // 配置数据转换器工厂
             converterFactories.add(new BuiltInConverters()); // 添加默认转换器
-            converterFactories.addAll(this.converterFactories); // 添加传入的转换器
+            converterFactories.addAll(this.converterFactories); // 添加用户传入的转换器
             converterFactories.addAll(platform.defaultConverterFactories()); // 添加平台默认转换器
 
+            // 使用 unmodifiableList 标记完，converterFactories 与 callAdapterFactories不可修改
             return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
                     unmodifiableList(callAdapterFactories), callbackExecutor, validateEagerly);
         }

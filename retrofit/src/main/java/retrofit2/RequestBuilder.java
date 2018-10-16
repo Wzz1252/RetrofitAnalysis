@@ -203,7 +203,7 @@ final class RequestBuilder {
             url = urlBuilder.build();
         } else {
             // No query parameters triggered builder creation, just combine the relative URL and base URL.
-            //noinspection ConstantConditions Non-null if urlBuilder is null.
+            // noinspection ConstantConditions Non-null if urlBuilder is null.
             url = baseUrl.resolve(relativeUrl);
             if (url == null) {
                 throw new IllegalArgumentException(

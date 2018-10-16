@@ -89,8 +89,8 @@ public interface CallAdapter<R, T> {
         }
 
         /**
-         * 从类型中提取原始类类型。 例如，表示List<？ extends Runnable> 返回 List.class。
-         * Extract the raw class type from {@code type}. For example, the type representing
+         * 从类型中提取原始类类型.
+         * 例如：Call<List<SimpleService>> --> Call
          * {@code List<? extends Runnable>} returns {@code List.class}.
          */
         protected static Class<?> getRawType(Type type) {

@@ -30,15 +30,17 @@ abstract class ServiceMethod<T> {
      * @return
      */
     static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
+        // 获得了具体的请求体内容
         RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
 
-        Type returnType = method.getGenericReturnType(); // 获得真正的返回值类型
+        // 获得方法的返回值类型
+        Type returnType = method.getGenericReturnType();
+        // 返回值不能是泛型类型，否则直接抛异常
         if (Utils.hasUnresolvableType(returnType)) {
             throw methodError(method,
                     "Method return type must not include a type variable or wildcard: %s", returnType);
         }
-
-        // 必须要有返回值类型，否则流程会出错
+        // 必须要有返回值类型，否则直接抛异常
         if (returnType == void.class) {
             throw methodError(method, "Service methods cannot return void.");
         }

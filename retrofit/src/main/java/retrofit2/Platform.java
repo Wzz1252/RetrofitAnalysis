@@ -166,8 +166,6 @@ class Platform {
         List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
                 @Nullable Executor callbackExecutor) {
             if (callbackExecutor == null) throw new AssertionError();
-
-
             return singletonList(new ExecutorCallAdapterFactory(callbackExecutor));
         }
 

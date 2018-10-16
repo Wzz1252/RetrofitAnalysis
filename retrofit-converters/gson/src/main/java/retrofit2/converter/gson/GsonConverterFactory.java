@@ -18,57 +18,55 @@ package retrofit2.converter.gson;
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
 /**
- * A {@linkplain Converter.Factory converter} which uses Gson for JSON.
- * <p>
- * Because Gson is so flexible in the types it supports, this converter assumes that it can handle
- * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
- * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
- * last to allow the other converters a chance to see their types.
+ * 使用Gson的JSON转换器。
+ * 因为Gson在它支持的类型中非常灵活，所以这个转换器假定它可以处理所有类型。如果要将JSON序列化与其他东西混合（例如
+ * 协议缓冲区），则必须最后添加此实例以允许其他转换器有机会查看其类型。
  */
 public final class GsonConverterFactory extends Converter.Factory {
-  /**
-   * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  public static GsonConverterFactory create() {
-    return create(new Gson());
-  }
+    /**
+     * 使用默认Gson实例创建实例以进行转换。 编码为JSON并从JSON解码（当标头没有指定字符集时）将使用UTF-8。
+     */
+    public static GsonConverterFactory create() {
+        return create(new Gson());
+    }
 
-  /**
-   * Create an instance using {@code gson} for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-  public static GsonConverterFactory create(Gson gson) {
-    if (gson == null) throw new NullPointerException("gson == null");
-    return new GsonConverterFactory(gson);
-  }
+    /**
+     * Create an instance using {@code gson} for conversion. Encoding to JSON and
+     * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+     */
+    @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
+    public static GsonConverterFactory create(Gson gson) {
+        if (gson == null) throw new NullPointerException("gson == null");
+        return new GsonConverterFactory(gson);
+    }
 
-  private final Gson gson;
+    private final Gson gson;
 
-  private GsonConverterFactory(Gson gson) {
-    this.gson = gson;
-  }
+    private GsonConverterFactory(Gson gson) {
+        this.gson = gson;
+    }
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonResponseBodyConverter<>(gson, adapter);
-  }
+    @Override
+    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+                                                            Retrofit retrofit) {
+        TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
+        return new GsonResponseBodyConverter<>(gson, adapter);
+    }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new GsonRequestBodyConverter<>(gson, adapter);
-  }
+    @Override
+    public Converter<?, RequestBody> requestBodyConverter(Type type,
+                                                          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+        TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
+        return new GsonRequestBodyConverter<>(gson, adapter);
+    }
 }

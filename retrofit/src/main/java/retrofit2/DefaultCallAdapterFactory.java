@@ -30,6 +30,14 @@ import javax.annotation.Nullable;
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
 
+    /**
+     * 获得指定的 CallAdapter
+     *
+     * @param returnType  返回值类型
+     * @param annotations 执行方法的所有注解
+     * @param retrofit    Retrofit 对象
+     * @return CallAdapter
+     */
     @Override
     public @Nullable
     CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
@@ -37,7 +45,8 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
             return null;
         }
 
-        // 拿到第一个泛型的上界
+        // 拿到第一个泛型的上界（为T中的上界类型【不管T中是否还有其他的泛型都一并算进去】）
+        // 例如: Call<List<SimpleService>> 上界是 List<SimpleService>
         final Type responseType = Utils.getCallResponseType(returnType);
         return new CallAdapter<Object, Call<?>>() {
             @Override
