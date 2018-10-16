@@ -148,26 +148,45 @@ public final class Retrofit {
      *   Call&lt;List&lt;Item&gt;&gt; categoryList(@Path("cat") String a, @Query("page") int b);
      * }
      * </pre>
+     * <p>
+     * 当执行完create方法后，会创建HttpServiceMethod类（这个类中包含了所有的所需内容）
      */
     @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
     public <T> T create(final Class<T> service) {
         // 判断是不是接口类型，如果不是抛出异常
         Utils.validateServiceInterface(service);
         if (validateEagerly) {
+            // 具体方法作用：
+            // 1. 给接口中每个方法的注解进行解析并得到一个 ServiceMethod 对象
+            // 2. 以 Method 为键将该对象存入 ConcurrentHashMap 集合中（ConcurrentHashMap 支持并发并通过锁分段技术提高性能）
+            // 特别注意：如果不是提前验证则进行动态解析对应方法（下面会详细说明），得到一个ServiceMethod对象，最后存入到 ConcurrentHashMap 集合中，类似延迟加载（默认）
             eagerlyValidateMethods(service);
         }
+
+        // 创建了网络请求接口的动态代理对象，即通过动态代理创建网络请求接口的实例 （并最终返回）
+        // 该动态代理是为了拿到网络请求接口实例上所有注解
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
                 new InvocationHandler() {
                     private final Platform platform = Platform.get();
                     private final Object[] emptyArgs = new Object[0];
 
+                    /**
+                     *
+                     * @param proxy
+                     * @param method 执行的方法名
+                     * @param args 方法所对应的形参列表
+                     * @return
+                     * @throws Throwable
+                     */
                     @Override
                     public Object invoke(Object proxy, Method method, @Nullable Object[] args)
                             throws Throwable {
-                        // If the method is a method from Object then defer to normal invocation.
+                        // 如果这个方法来自 Object，则走默认逻辑
                         if (method.getDeclaringClass() == Object.class) {
                             return method.invoke(this, args);
                         }
+
+                        // 如果是默认方法，则单独处理（在 Android 中直接抛异常）
                         if (platform.isDefaultMethod(method)) {
                             return platform.invokeDefaultMethod(method, service, proxy, args);
                         }
@@ -178,6 +197,7 @@ public final class Retrofit {
 
     private void eagerlyValidateMethods(Class<?> service) {
         Platform platform = Platform.get();
+        // getDeclaredMethods() 获取本类中的所有方法，包括私有的(private、protected、默认以及public)的方法。
         for (Method method : service.getDeclaredMethods()) {
             if (!platform.isDefaultMethod(method)) {
                 loadServiceMethod(method);
@@ -187,7 +207,9 @@ public final class Retrofit {
 
     ServiceMethod<?> loadServiceMethod(Method method) {
         ServiceMethod<?> result = serviceMethodCache.get(method);
-        if (result != null) return result;
+        if (result != null) {
+            return result;
+        }
 
         synchronized (serviceMethodCache) {
             result = serviceMethodCache.get(method);
@@ -243,6 +265,7 @@ public final class Retrofit {
         checkNotNull(returnType, "returnType == null");
         checkNotNull(annotations, "annotations == null");
 
+        // 检索出指定的适配器
         int start = callAdapterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = callAdapterFactories.size(); i < count; i++) {
             CallAdapter<?, ?> adapter = callAdapterFactories.get(i).get(returnType, annotations, this);
@@ -251,6 +274,7 @@ public final class Retrofit {
             }
         }
 
+        // 通过异常的方式告知没有找到指定的适配器
         StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
                 .append(returnType)
                 .append(".\n");
@@ -341,6 +365,7 @@ public final class Retrofit {
     }
 
     /**
+     * 获得一个指定的转化器
      * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
      * {@linkplain #converterFactories() factories} except {@code skipPast}.
      *
@@ -351,16 +376,18 @@ public final class Retrofit {
         checkNotNull(type, "type == null");
         checkNotNull(annotations, "annotations == null");
 
+        // 获得指定的转化器
         int start = converterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             Converter<ResponseBody, ?> converter =
                     converterFactories.get(i).responseBodyConverter(type, annotations, this);
             if (converter != null) {
-                //noinspection unchecked
+                // noinspection unchecked
                 return (Converter<ResponseBody, T>) converter;
             }
         }
 
+        // 没有找到指定的转化器，通过异常的方式提示给用户
         StringBuilder builder = new StringBuilder("Could not locate ResponseBody converter for ")
                 .append(type)
                 .append(".\n");

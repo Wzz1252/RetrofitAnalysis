@@ -23,7 +23,7 @@ import okhttp3.ResponseBody;
 
 import static retrofit2.Utils.checkNotNull;
 
-/** An HTTP response. */
+/** 一个 HTTP 响应 */
 public final class Response<T> {
   /** Create a synthetic successful response with {@code body} as the deserialized body. */
   public static <T> Response<T> success(@Nullable T body) {

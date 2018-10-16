@@ -16,9 +16,12 @@
 package com.example.retrofit;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
@@ -45,9 +48,7 @@ public final class SimpleService {
 
     public interface GitHub {
         @GET("/repos/{owner}/{repo}/contributors")
-        Call<List<Contributor>> contributors(
-                @Path("owner") String owner,
-                @Path("repo") String repo);
+        Call<List<Contributor>> contributors(@Path("owner") String owner, @Path("repo") String repo);
     }
 
     public static void main(String... args) throws IOException {
@@ -59,12 +60,29 @@ public final class SimpleService {
         GitHub github = retrofit.create(GitHub.class);
 
         // 创建一个贡献者实例
+        // 当执行 contributors 时，将通过动态代理调用 invoke 方法
         Call<List<Contributor>> call = github.contributors("square", "retrofit");
 
-        // 打印返回结果
-        List<Contributor> contributors = call.execute().body();
+        // 异步 打印返回结果
+        call.enqueue(new Callback<List<Contributor>>() {
+            @Override
+            public void onResponse(Call<List<Contributor>> call, Response<List<Contributor>> response) {
+                System.out.println("onResponse: success");
+                printResponse(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<List<Contributor>> call, Throwable t) {
+                System.out.println("onFailure: " + t.getMessage());
+            }
+        });
+//        // 同步 打印返回结果
+//        printResponse(call.execute().body());
+    }
+
+    private static void printResponse(List<Contributor> contributors) {
         for (Contributor contributor : contributors) {
-            System.out.println(contributor.login + " (" + contributor.contributions + ")");
+            System.out.println("结果：" + contributor.login + " (" + contributor.contributions + ")");
         }
     }
 }

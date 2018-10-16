@@ -50,31 +50,34 @@ import static retrofit2.Utils.checkNotNull;
  * types for parameters!
  */
 public final class Invocation {
-  public static Invocation of(Method method, List<?> arguments) {
-    checkNotNull(method, "method == null");
-    checkNotNull(arguments, "arguments == null");
-    return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
-  }
+    public static Invocation of(Method method, List<?> arguments) {
+        checkNotNull(method, "method == null");
+        checkNotNull(arguments, "arguments == null");
+        return new Invocation(method, new ArrayList<>(arguments)); // Defensive copy.
+    }
 
-  private final Method method;
-  private final List<?> arguments;
+    private final Method method;
+    private final List<?> arguments;
 
-  /** Trusted constructor assumes ownership of {@code arguments}. */
-  Invocation(Method method, List<?> arguments) {
-    this.method = method;
-    this.arguments = Collections.unmodifiableList(arguments);
-  }
+    /**
+     * Trusted constructor assumes ownership of {@code arguments}.
+     */
+    Invocation(Method method, List<?> arguments) {
+        this.method = method;
+        this.arguments = Collections.unmodifiableList(arguments);
+    }
 
-  public Method method() {
-    return method;
-  }
+    public Method method() {
+        return method;
+    }
 
-  public List<?> arguments() {
-    return arguments;
-  }
+    public List<?> arguments() {
+        return arguments;
+    }
 
-  @Override public String toString() {
-    return String.format("%s.%s() %s",
-        method.getDeclaringClass().getName(), method.getName(), arguments);
-  }
+    @Override
+    public String toString() {
+        return String.format("%s.%s() %s",
+                method.getDeclaringClass().getName(), method.getName(), arguments);
+    }
 }

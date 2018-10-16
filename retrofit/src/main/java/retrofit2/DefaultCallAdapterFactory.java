@@ -23,25 +23,32 @@ import javax.annotation.Nullable;
  * Creates call adapters for that uses the same thread for both I/O and application-level
  * callbacks. For synchronous calls this is the application thread making the request; for
  * asynchronous calls this is a thread provided by OkHttp's dispatcher.
+ * <p>
+ * 为其创建调用适配器，为 I/O 和应用程序级回调使用相同的线程。 对于同步调用，这是发出请求的应用程序线程;
+ * 对于异步调用，这是 OkHttp 的调度程序提供的一个线程。
  */
 final class DefaultCallAdapterFactory extends CallAdapter.Factory {
-  static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
+    static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
 
-  @Override public @Nullable CallAdapter<?, ?> get(
-      Type returnType, Annotation[] annotations, Retrofit retrofit) {
-    if (getRawType(returnType) != Call.class) {
-      return null;
+    @Override
+    public @Nullable
+    CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Retrofit retrofit) {
+        if (getRawType(returnType) != Call.class) {
+            return null;
+        }
+
+        // 拿到第一个泛型的上界
+        final Type responseType = Utils.getCallResponseType(returnType);
+        return new CallAdapter<Object, Call<?>>() {
+            @Override
+            public Type responseType() {
+                return responseType;
+            }
+
+            @Override
+            public Call<Object> adapt(Call<Object> call) {
+                return call;
+            }
+        };
     }
-
-    final Type responseType = Utils.getCallResponseType(returnType);
-    return new CallAdapter<Object, Call<?>>() {
-      @Override public Type responseType() {
-        return responseType;
-      }
-
-      @Override public Call<Object> adapt(Call<Object> call) {
-        return call;
-      }
-    };
-  }
 }

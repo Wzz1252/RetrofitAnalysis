@@ -29,15 +29,20 @@ import okhttp3.Request;
  * is busy writing its request or reading its response may receive a {@link IOException}; this is
  * working as designed.
  *
+ * 调用Retrofit方法，该方法将请求发送到Web服务器并返回响应。 每次调用都会产生自己的HTTP请求和响应对。
+ * 使用clone使用相同的参数对同一个Web服务器进行多次调用; 这可用于实现轮询或重试失败的呼叫。
+ *
+ * 调用可以与execute同步执行，也可以与enqueue异步执行。在任何一种情况下，都可以随时取消呼叫取消。
+ * 正在忙于写入其请求或读取其响应的调用可能会收到IOException; 这是按设计工作的。
+ *
  * @param <T> Successful response body type.
  */
 public interface Call<T> extends Cloneable {
   /**
-   * Synchronously send the request and return its response.
+   * 同步发送请求并返回其响应
    *
-   * @throws IOException if a problem occurred talking to the server.
-   * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request
-   * or decoding the response.
+   * @throws IOException 如果发生与服务器通信的问题
+   * @throws RuntimeException （和子类）如果在创建请求或解码响应时发生意外错误。
    */
   Response<T> execute() throws IOException;
 

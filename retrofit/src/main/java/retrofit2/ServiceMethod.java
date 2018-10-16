@@ -21,20 +21,30 @@ import java.lang.reflect.Type;
 import static retrofit2.Utils.methodError;
 
 abstract class ServiceMethod<T> {
-  static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
-    RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
+    /**
+     * 解析注解
+     *
+     * @param retrofit 核心对象
+     * @param method   XXXService 接口所定义的方法
+     * @param <T>
+     * @return
+     */
+    static <T> ServiceMethod<T> parseAnnotations(Retrofit retrofit, Method method) {
+        RequestFactory requestFactory = RequestFactory.parseAnnotations(retrofit, method);
 
-    Type returnType = method.getGenericReturnType();
-    if (Utils.hasUnresolvableType(returnType)) {
-      throw methodError(method,
-          "Method return type must not include a type variable or wildcard: %s", returnType);
+        Type returnType = method.getGenericReturnType(); // 获得真正的返回值类型
+        if (Utils.hasUnresolvableType(returnType)) {
+            throw methodError(method,
+                    "Method return type must not include a type variable or wildcard: %s", returnType);
+        }
+
+        // 必须要有返回值类型，否则流程会出错
+        if (returnType == void.class) {
+            throw methodError(method, "Service methods cannot return void.");
+        }
+
+        return HttpServiceMethod.parseAnnotations(retrofit, method, requestFactory);
     }
-    if (returnType == void.class) {
-      throw methodError(method, "Service methods cannot return void.");
-    }
 
-    return HttpServiceMethod.parseAnnotations(retrofit, method, requestFactory);
-  }
-
-  abstract T invoke(Object[] args);
+    abstract T invoke(Object[] args);
 }
